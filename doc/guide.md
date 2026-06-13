@@ -84,30 +84,92 @@ struct Action {
 ### Node & List
 
 ```cpp
+// linkedlist/LinkedList.h
+#ifndef LINKEDLIST_H
+#define LINKEDLIST_H
+
+#include "../types.h"
+
 struct Node {
     Book data;
     Node* next;
 };
 
-class LinkedList {
-private:
+struct LinkedList {
     Node* head;
-    int   size;
-public:
-    LinkedList();
-    ~LinkedList();
-    // --- CRUD ---
-    void addBook(Book b);
-    bool deleteBook(int bookId);
-    bool updateBook(int bookId, Book updatedData);
-    void displayAll();
-    Node* searchById(int bookId);
-    Node* searchByTitle(string title);
-    // --- Utilities ---
-    int   getSize();
-    Node* getHead();
-    bool  isEmpty();
+    int size;
 };
+
+// CRUD Operations
+void addBook(LinkedList& list, Book b);
+bool deleteBook(LinkedList& list, int bookId);
+bool updateBook(LinkedList& list, int bookId, Book updatedData);
+void displayAll(LinkedList& list);
+
+// Search Operations
+Node* searchById(LinkedList& list, int bookId);
+Node* searchByTitle(LinkedList& list, string title);
+
+// Utilities
+int getSize(LinkedList& list);
+bool isEmpty(LinkedList& list);
+
+#endif
+```
+
+
+
+### Header / Source File Pattern
+
+Use **structs + standalone functions** instead of classes.
+
+**Header file (`.h`)**
+```cpp
+#ifndef LINKEDLIST_H
+#define LINKEDLIST_H
+
+#include "../types.h"
+
+struct Node {
+    Book data;
+    Node* next;
+};
+
+struct LinkedList {
+    Node* head;
+    int size;
+};
+
+void addBook(LinkedList& list, Book b);
+
+#endif
+```
+
+**Source file (`.cpp`)**
+```cpp
+#include "LinkedList.h"
+#include <iostream>
+using namespace std;
+
+void addBook(LinkedList& list, Book b) {
+    // implementation here
+}
+```
+
+**Usage in `main.cpp`**
+```cpp
+#include "linkedlist/LinkedList.h"
+#include "stack/Stack.h"
+#include "queue/Queue.h"
+
+int main() {
+    LinkedList books = {nullptr, 0};
+
+    Book b;
+    addBook(books, b);
+
+    return 0;
+}
 ```
 
 ### Functions to Implement
