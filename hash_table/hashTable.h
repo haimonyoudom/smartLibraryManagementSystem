@@ -22,6 +22,7 @@ struct HashTable {
     void insertBook(Book data);
     bool deleteBook(int bookId);
     Book* searchById(int bookId);
+    void display();
 };
 
 #endif

@@ -67,3 +67,20 @@ bool HashTable::deleteBook(int bookId) {
     }
     return false;
 }
+
+void HashTable::display() {
+    for (int i = 0; i < HT_SIZE; i++) {
+        cout << "Bucket " << i << ": ";
+        if (table[i]->n == 0) {
+            cout << "NULL" << endl;
+        } else {
+            HTNode* e = table[i]->head;
+            while (e != nullptr) {
+                cout << "[ID:" << e->data.id << " " << e->data.title << "]";
+                if (e->next != nullptr) cout << " --> ";
+                e = e->next;
+            }
+            cout << endl;
+        }
+    }
+}
