@@ -1,3 +1,4 @@
-Fiction
-Programming
-Science
+Fiction,0
+Programming,1
+Science,0
+nana cute,0

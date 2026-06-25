@@ -10,6 +10,11 @@ BST::~BST() {
     destroyRec(root);
 }
 
+void BST::clear() {
+    destroyRec(root);
+    root = nullptr;
+}
+
 TreeNode* BST::insertRec(TreeNode* node, string cat) {
     if (node == nullptr) {
         TreeNode* temp = new TreeNode;
@@ -122,6 +127,20 @@ void BST::incrementRec(TreeNode* node, string cat) {
     }
 }
 
+void BST::setCountRec(TreeNode* node, string cat, int count) {
+    if (node == nullptr) {
+        return;
+    }
+
+    if (cat == node->category) {
+        node->bookCount = count;
+    } else if (cat < node->category) {
+        setCountRec(node->left, cat, count);
+    } else {
+        setCountRec(node->right, cat, count);
+    }
+}
+
 void BST::mostBorrowedRec(TreeNode* node, string& category, int& maxCount) {
     if (node == nullptr) {
         return;
@@ -143,8 +162,45 @@ void BST::saveRec(TreeNode* node, ostream& out) {
     }
 
     saveRec(node->left, out);
-    out << node->category << "\n";
+    out << node->category << "," << node->bookCount << "\n";
     saveRec(node->right, out);
+}
+
+void BST::displayNumberedRec(TreeNode* node, int& number) {
+    if (node == nullptr) {
+        return;
+    }
+
+    displayNumberedRec(node->left, number);
+    cout << number << ". " << node->category << endl;
+    number++;
+    displayNumberedRec(node->right, number);
+}
+
+string BST::getByIndexRec(TreeNode* node, int target, int& number) {
+    if (node == nullptr) {
+        return "";
+    }
+
+    string left = getByIndexRec(node->left, target, number);
+    if (!left.empty()) {
+        return left;
+    }
+
+    if (number == target) {
+        return node->category;
+    }
+    number++;
+
+    return getByIndexRec(node->right, target, number);
+}
+
+int BST::countRec(TreeNode* node) {
+    if (node == nullptr) {
+        return 0;
+    }
+
+    return 1 + countRec(node->left) + countRec(node->right);
 }
 
 void BST::addCategory(string category) {
@@ -164,6 +220,16 @@ void BST::displayTree() {
     inorderRec(root);
 }
 
+void BST::displayCategoriesNumbered() {
+    if (root == nullptr) {
+        cout << "No categories available.\n";
+        return;
+    }
+
+    int number = 1;
+    displayNumberedRec(root, number);
+}
+
 bool BST::searchCategory(string category) {
     return searchRec(root, category);
 }
@@ -176,11 +242,28 @@ void BST::incrementCount(string category) {
     incrementRec(root, category);
 }
 
+void BST::setCount(string category, int count) {
+    if (!searchCategory(category)) {
+        addCategory(category);
+    }
+
+    setCountRec(root, category, count);
+}
+
 string BST::getMostBorrowedCategory() {
     string category = "";
     int maxCount = -1;
     mostBorrowedRec(root, category, maxCount);
     return category;
+}
+
+string BST::getCategoryByIndex(int index) {
+    int number = 1;
+    return getByIndexRec(root, index, number);
+}
+
+int BST::countCategories() {
+    return countRec(root);
 }
 
 void BST::saveCategories(ostream& out) {

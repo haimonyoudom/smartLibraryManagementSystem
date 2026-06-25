@@ -133,14 +133,26 @@ void saveCategoriesToFile(BST& tree, string filename) {
 void loadCategoriesFromFile(BST& tree, string filename) {
     ifstream fin(filename);
     if (!fin) {
+        tree.clear();
         cout << "No existing " << filename << " found. Starting with an empty tree.\n";
         return;
     }
 
-    string category;
-    while (getline(fin, category)) {
-        if (category.empty()) continue;
+    tree.clear();
+    string line;
+    while (getline(fin, line)) {
+        if (line.empty()) continue;
+
+        stringstream ss(line);
+        string category;
+        string countText;
+        getline(ss, category, ',');
+        getline(ss, countText);
+
         tree.addCategory(category);
+        if (!countText.empty()) {
+            tree.setCount(category, stoi(countText));
+        }
     }
 
     fin.close();

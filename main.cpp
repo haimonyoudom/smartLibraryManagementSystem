@@ -3,6 +3,7 @@
 #include "stack/Stack.h"
 #include <iostream>
 #include <limits>
+#include <sstream>
 using namespace std;
 
 void clearInput() {
@@ -31,6 +32,32 @@ string readLine(string label) {
     return value;
 }
 
+string readLineDefault(string label, string oldValue) {
+    string value;
+    cout << label << " [" << oldValue << "]: ";
+    getline(cin, value);
+    return value.empty() ? oldValue : value;
+}
+
+int readIntDefault(string label, int oldValue) {
+    string value;
+    while (true) {
+        cout << label << " [" << oldValue << "]: ";
+        getline(cin, value);
+        if (value.empty()) {
+            return oldValue;
+        }
+
+        stringstream ss(value);
+        int number;
+        if (ss >> number) {
+            return number;
+        }
+
+        cout << "Invalid number. Try again.\n";
+    }
+}
+
 void updateBookStatus(Book& b) {
     b.status = (b.quantity > 0) ? "available" : "borrowed";
 }
@@ -56,20 +83,66 @@ void printBook(Book b) {
     printf("+----+---------------------------+---------------------------+---------------------------+-----+-----------+----------+\n");
 }
 
-Book inputBook(int id = -1) {
+string selectCategory(BST& categories, string current = "") {
+    int total = categories.countCategories();
+    if (total == 0) {
+        return readLine("Category: ");
+    }
+
+    cout << "Select category:\n";
+    categories.displayCategoriesNumbered();
+    cout << "0. New category";
+    if (!current.empty()) {
+        cout << " / keep current [" << current << "]";
+    }
+    cout << endl;
+
+    while (true) {
+        int choice = readInt("Choose category: ");
+        if (choice == 0) {
+            if (!current.empty()) {
+                string category = readLine("New category or Enter to keep current: ");
+                return category.empty() ? current : category;
+            }
+
+            return readLine("New category: ");
+        }
+
+        string category = categories.getCategoryByIndex(choice);
+        if (!category.empty()) {
+            return category;
+        }
+
+        cout << "Invalid category number.\n";
+    }
+}
+
+Book inputBook(BST& categories, int id = -1) {
     Book b;
     b.id = (id == -1) ? readInt("Book ID: ") : id;
     b.title = readLine("Title: ");
     b.author = readLine("Author: ");
-    b.category = readLine("Category: ");
+    b.category = selectCategory(categories);
     b.quantity = readInt("Quantity: ");
     updateBookStatus(b);
     b.borrowCount = readInt("Borrow count: ");
     return b;
 }
 
+Book inputBookUpdate(Book oldBook, BST& categories) {
+    Book b;
+    b.id = oldBook.id;
+    b.title = readLineDefault("Title", oldBook.title);
+    b.author = readLineDefault("Author", oldBook.author);
+    b.category = selectCategory(categories, oldBook.category);
+    b.quantity = readIntDefault("Quantity", oldBook.quantity);
+    updateBookStatus(b);
+    b.borrowCount = readIntDefault("Borrow count", oldBook.borrowCount);
+    return b;
+}
+
 void addBook(LinkedList& books, BST& categories, Stack& history) {
-    Book b = inputBook();
+    Book b = inputBook(categories);
     if (books.searchById(b.id) != nullptr) {
         cout << "Book ID already exists.\n";
         return;
@@ -99,7 +172,7 @@ void updateBook(LinkedList& books, BST& categories, Stack& history) {
     action.bookSnapshot = found->data;
     history.push(action);
 
-    Book updated = inputBook(id);
+    Book updated = inputBookUpdate(found->data, categories);
     books.updateBook(id, updated);
     categories.addCategory(updated.category);
 
@@ -268,9 +341,9 @@ void categoryMenu(LinkedList& books, Queue& queue, BST& categories) {
         cout << "\n--- Categories ---\n";
         cout << "1. Add category\n";
         cout << "2. Delete category\n";
-        cout << "3. Search category\n";
-        cout << "4. Display categories\n";
-        cout << "5. Most borrowed category\n";
+        cout << "3. Display categories\n";
+        cout << "4. Most borrowed category\n";
+        cout << "5. Reload categories from file\n";
         cout << "0. Back\n";
 
         int choice = readInt("Choose: ");
@@ -284,13 +357,13 @@ void categoryMenu(LinkedList& books, Queue& queue, BST& categories) {
             saveAll(books, queue, categories);
             cout << "Category deleted if it existed.\n";
         } else if (choice == 3) {
-            string category = readLine("Category: ");
-            cout << (categories.searchCategory(category) ? "Found.\n" : "Not found.\n");
-        } else if (choice == 4) {
             categories.displayTree();
-        } else if (choice == 5) {
+        } else if (choice == 4) {
             string category = categories.getMostBorrowedCategory();
             cout << (category.empty() ? "No category data.\n" : "Most borrowed: " + category + "\n");
+        } else if (choice == 5) {
+            loadCategoriesFromFile(categories);
+            cout << "Categories reloaded.\n";
         } else {
             cout << "Invalid choice.\n";
         }
@@ -303,7 +376,6 @@ void mainMenu() {
     cout << "2. Waiting queue\n";
     cout << "3. Categories\n";
     cout << "4. View history\n";
-    cout << "5. Save now\n";
     cout << "0. Exit\n";
 }
 
@@ -331,10 +403,7 @@ int main() {
         else if (choice == 2) queue.display();
         else if (choice == 3) categoryMenu(books, queue, categories);
         else if (choice == 4) history.viewHistory();
-        else if (choice == 5) {
-            saveAll(books, queue, categories);
-            cout << "Saved.\n";
-        } else {
+        else {
             cout << "Invalid choice.\n";
         }
     }
