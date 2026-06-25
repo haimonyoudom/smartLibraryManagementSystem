@@ -1,6 +1,6 @@
 #ifndef LINKEDLIST_H
 #define LINKEDLIST_H
-#include "../util/type.h"
+#include "../utils/type.h"
 
 
 struct Element{

@@ -1,7 +1,7 @@
 #ifndef STACK_H
 #define STACK_H
 
-#include "./util/type.h"
+#include "../utils/type.h"
 
 struct StackElement
 {

@@ -24,6 +24,7 @@ void saveBooksToCSV(LinkedList& list, string filename) {
 
     Element* curr = list.head;
     while (curr != nullptr) {
+        curr->data.status = (curr->data.quantity > 0) ? "available" : "borrowed";
         Book b = curr->data;
         fout << b.id << ","
              << b.title << ","
@@ -58,7 +59,7 @@ void loadBooksFromCSV(LinkedList& list, string filename) {
         b.author      = fields[2];
         b.category    = fields[3];
         b.quantity    = stoi(fields[4]);
-        b.status      = fields[5];
+        b.status      = (b.quantity > 0) ? "available" : "borrowed";
         b.borrowCount = stoi(fields[6]);
 
         list.addBook(b);
@@ -118,10 +119,29 @@ void loadQueueFromFile(Queue& q, string filename) {
 }
 
 // CATEGORIES -> categories.txt
-// void saveCategoriesToFile(BST& tree, string filename) {
-    
-// }
+void saveCategoriesToFile(BST& tree, string filename) {
+    ofstream fout(filename);
+    if (!fout) {
+        cout << "Error: could not open " << filename << " for writing.\n";
+        return;
+    }
 
-// void loadCategoriesFromFile(BST& tree, string filename) {
-    
-// }
+    tree.saveCategories(fout);
+    fout.close();
+}
+
+void loadCategoriesFromFile(BST& tree, string filename) {
+    ifstream fin(filename);
+    if (!fin) {
+        cout << "No existing " << filename << " found. Starting with an empty tree.\n";
+        return;
+    }
+
+    string category;
+    while (getline(fin, category)) {
+        if (category.empty()) continue;
+        tree.addCategory(category);
+    }
+
+    fin.close();
+}

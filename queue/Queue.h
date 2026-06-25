@@ -1,7 +1,7 @@
 #ifndef QUEUE_H
 #define QUEUE_H
 
-#include "../util/type.h"
+#include "../utils/type.h"
 struct QElement{
     Student data;
     QElement* next;

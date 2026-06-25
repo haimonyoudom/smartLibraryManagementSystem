@@ -1,6 +1,6 @@
 #ifndef SORT_H
 #define SORT_H
-#include "../util/type.h"
+#include "../utils/type.h"
 #include "../linked_list/LinkedList.h"
 
 class Sort {
