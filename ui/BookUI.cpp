@@ -204,17 +204,16 @@ static void returnBook(LinkedList& books, HashTable& ht, Queue& queue,
     books.updateBook(id, *found);
     cout << "  ✓ Book returned.\n";
 
-    if (!queue.isEmpty() && queue.peek().requestedBookId == id) {
-        Student s = queue.dequeue();
-
-    Action autoBorrow;
-    autoBorrow.type            = "BORROW";
-    autoBorrow.bookSnapshot    = *found;
-    autoBorrow.meta            = "AUTO";
-    autoBorrow.studentSnapshot = s;      // ← save student
-    autoBorrow.hasStudent      = true;   // ← mark it
-    history.push(autoBorrow);
-        // ─────────────────────────────────────────────────────────────────
+    // ── Search queue for ANY student waiting for this book ──
+    Student s = queue.dequeueByBookId(id);   // returns empty Student if not found
+    if (s.studentId != 0) {                  // assuming 0 means "not found"
+        Action autoBorrow;
+        autoBorrow.type            = "BORROW";
+        autoBorrow.bookSnapshot    = *found;
+        autoBorrow.meta            = "AUTO";
+        autoBorrow.studentSnapshot = s;
+        autoBorrow.hasStudent      = true;
+        history.push(autoBorrow);
 
         found->quantity--;
         found->borrowCount++;
@@ -225,7 +224,6 @@ static void returnBook(LinkedList& books, HashTable& ht, Queue& queue,
              << s.name << " (ID " << s.studentId << ")\n";
     }
 }
-
 // ── Undo ──────────────────────────────────────
 
 static void undoAction(LinkedList& books, HashTable& ht, Queue& queue,
