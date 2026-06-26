@@ -1,4 +1,4 @@
-Fiction,0
-Programming,1
-Science,0
-nana cute,0
+Fiction,19
+Programming,20
+Science,17
+History,1

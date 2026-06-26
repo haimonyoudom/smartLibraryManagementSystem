@@ -1,7 +1,7 @@
 #ifndef HASHTABLE_H
 #define HASHTABLE_H
 
-#include "../util/type.h"
+#include "../utils/type.h"
 
 const int HT_SIZE = 10;
 
