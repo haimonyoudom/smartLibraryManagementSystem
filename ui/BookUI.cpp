@@ -4,6 +4,32 @@
 #include "../utils/FileIO.h"
 #include <iostream>
 using namespace std;
+// ── String helpers ────────────────────────────
+
+static char toLowerChar(char c) {
+    if (c >= 'A' && c <= 'Z') return c + 32;
+    return c;
+}
+
+static string toLowerStr(const string& s) {
+    string result = s;
+    for (int i = 0; i < (int)result.size(); i++)
+        result[i] = toLowerChar(result[i]);
+    return result;
+}
+
+static bool containsStr(const string& text, const string& query) {
+    if (query.empty()) return true;
+    if (query.size() > text.size()) return false;
+    for (int i = 0; i <= (int)(text.size() - query.size()); i++) {
+        bool match = true;
+        for (int j = 0; j < (int)query.size(); j++) {
+            if (text[i + j] != query[j]) { match = false; break; }
+        }
+        if (match) return true;
+    }
+    return false;
+}
 
 // ── Internal helpers ──────────────────────────
 
@@ -68,7 +94,7 @@ static void addBook(LinkedList& books, HashTable& ht,
     cout << "  ✓ Book added.\n";
 }
 
-static void updateBook(LinkedList& books, HashTable& ht,
+static void updateBook(LinkedList& books, HashTable& ht, Queue& queue,
                        BST& categories, Stack& history) {
     cout << "\n-- Update Book --\n";
     int id = readInt("Book ID to update: ");
@@ -85,10 +111,31 @@ static void updateBook(LinkedList& books, HashTable& ht,
     Book updated = inputBookUpdate(*found, categories);
     syncUpdate(books, ht, id, updated);
     categories.addCategory(updated.category);
-
     cout << "  ✓ Book updated.\n";
-}
 
+    // ── Auto-assign to waiting students if quantity increased ──
+    Book* current = ht.searchById(id);
+    while (current->quantity > 0) {
+        Student s = queue.dequeueByBookId(id);
+        if (s.studentId == 0) break;
+
+        Action autoBorrow;
+        autoBorrow.type            = "BORROW";
+        autoBorrow.bookSnapshot    = *current;
+        autoBorrow.meta            = "AUTO";
+        autoBorrow.studentSnapshot = s;
+        autoBorrow.hasStudent      = true;
+        history.push(autoBorrow);
+
+        current->quantity--;
+        current->borrowCount++;
+        updateBookStatus(*current);
+        books.updateBook(id, *current);
+        categories.incrementCount(current->category);
+        cout << "  ✓ Automatically given to waiting student: "
+             << s.name << " (ID " << s.studentId << ")\n";
+    }
+}
 static void deleteBook(LinkedList& books, HashTable& ht, Stack& history) {
     cout << "\n-- Delete Book --\n";
     int id = readInt("Book ID to delete: ");
@@ -120,10 +167,27 @@ static void searchBook(HashTable& ht, LinkedList& books) {
         else printBook(*found);
 
     } else if (choice == 2) {
-        string title = readLine("Title: ");
-        Element* found = books.searchByTitle(title);
-        if (found == nullptr) cout << "  ! Book not found.\n";
-        else printBook(found->data);
+    string query = readLine("Search title: ");
+    string queryLower = toLowerStr(query);
+
+    int matchCount = 0;
+    printHeader();
+
+    Element* e = books.head;
+    while (e != nullptr) {
+        string titleLower = toLowerStr(e->data.title);
+        if (containsStr(titleLower, queryLower)) {
+            printBookRow(e->data);
+            matchCount++;
+        }
+        e = e->next;
+    }
+
+    printDivider();
+    if (matchCount == 0)
+        cout << "  ! No books found matching \"" << query << "\".\n";
+    else
+        cout << "  " << matchCount << " result(s) found.\n";
 
     } else {
         cout << "  ! Invalid choice.\n";
@@ -359,7 +423,7 @@ void bookMenu(LinkedList& books, HashTable& ht, Queue& queue,
             case 0: return;
             case 1: addBook(books, ht, categories, history);
                     saveAll(books, queue, categories); break;
-            case 2: updateBook(books, ht, categories, history);
+            case 2: updateBook(books, ht, queue, categories, history);
                     saveAll(books, queue, categories); break;
             case 3: deleteBook(books, ht, history);
                     saveAll(books, queue, categories); break;
