@@ -17,5 +17,6 @@ struct Queue{
     void display();
     bool isEmpty();
     int getSize();
+    Student dequeueByBookId(int bookId);
 };
 #endif

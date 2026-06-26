@@ -216,6 +216,110 @@ static void returnBook(LinkedList& books, HashTable& ht, Queue& queue,
     }
 }
 
+// ── Undo ──────────────────────────────────────
+
+static void undoAction(LinkedList& books, HashTable& ht,
+                       BST& categories, Stack& history) {
+    if (history.isEmpty()) {
+        cout << "  ! Nothing to undo.\n";
+        return;
+    }
+
+    Action last = history.peek();
+    cout << "\n-- Undo --\n";
+
+    // ── Category batch delete ──────────────────
+    // Stack layout: top→[DELETE]...[DELETE][CAT_DELETE_START]
+    // We peek the top DELETE entries to show the user what will be restored
+    if (last.type == "DELETE") {
+        // Check if there's a CAT_DELETE_START sentinel below
+        // by scanning the stack to count consecutive DELETEs then checking sentinel
+        StackElement* e = history.top;
+        int batchCount = 0;
+        while (e != nullptr && e->data.type == "DELETE") {
+            batchCount++;
+            e = e->next;
+        }
+        bool isCatBatch = (e != nullptr && e->data.type == "CAT_DELETE_START");
+
+        if (isCatBatch) {
+            string catName = e->data.meta;
+            cout << "  Last action : DELETE CATEGORY \"" << catName << "\"\n";
+            cout << "  Books to restore: " << batchCount << "\n";
+            if (!confirm("Undo this action?")) { cout << "  Cancelled.\n"; return; }
+
+            // Pop and restore all books in the batch
+            for (int i = 0; i < batchCount; i++) {
+                Action a = history.pop();
+                Book snap = a.bookSnapshot;
+                syncAdd(books, ht, snap);
+                categories.addCategory(snap.category);
+            }
+            // Pop the sentinel
+            history.pop();
+
+            // Re-add the category itself (in case it had 0 books)
+            categories.addCategory(catName);
+            cout << "  ✓ Undone: category \"" << catName
+                 << "\" and " << batchCount << " book(s) restored.\n";
+            return;
+        }
+    }
+
+    // ── Single action ──────────────────────────
+    if (last.type == "CAT_DELETE_START") {
+        // Empty category delete — just pop sentinel and re-add category
+        cout << "  Last action : DELETE CATEGORY \"" << last.meta << "\" (empty)\n";
+        if (!confirm("Undo this action?")) { cout << "  Cancelled.\n"; return; }
+        history.pop();
+        categories.addCategory(last.meta);
+        cout << "  ✓ Undone: category \"" << last.meta << "\" restored.\n";
+        return;
+    }
+
+    cout << "  Last action : " << last.type << "\n";
+    cout << "  Book        : [" << last.bookSnapshot.id << "] "
+         << last.bookSnapshot.title << "\n";
+    if (!confirm("Undo this action?")) { cout << "  Cancelled.\n"; return; }
+
+    history.pop();
+    Book snap = last.bookSnapshot;
+
+    if (last.type == "ADD") {
+        syncDelete(books, ht, snap.id);
+        cout << "  ✓ Undone: book [" << snap.id << "] removed.\n";
+
+    } else if (last.type == "DELETE") {
+        syncAdd(books, ht, snap);
+        categories.addCategory(snap.category);
+        cout << "  ✓ Undone: book [" << snap.id << "] restored.\n";
+
+    } else if (last.type == "UPDATE") {
+        syncUpdate(books, ht, snap.id, snap);
+        cout << "  ✓ Undone: book [" << snap.id << "] restored to previous state.\n";
+
+    } else if (last.type == "BORROW") {
+        Book* current = ht.searchById(snap.id);
+        if (current == nullptr) { cout << "  ! Book no longer exists.\n"; return; }
+        current->quantity++;
+        current->borrowCount--;
+        updateBookStatus(*current);
+        books.updateBook(snap.id, *current);
+        cout << "  ✓ Undone: borrow reversed for book [" << snap.id << "].\n";
+
+    } else if (last.type == "RETURN") {
+        Book* current = ht.searchById(snap.id);
+        if (current == nullptr) { cout << "  ! Book no longer exists.\n"; return; }
+        current->quantity--;
+        updateBookStatus(*current);
+        books.updateBook(snap.id, *current);
+        cout << "  ✓ Undone: return reversed for book [" << snap.id << "].\n";
+
+    } else {
+        cout << "  ! Unknown action type, cannot undo.\n";
+    }
+}
+
 // ── Menu ──────────────────────────────────────
 
 void bookMenu(LinkedList& books, HashTable& ht, Queue& queue,
@@ -230,6 +334,7 @@ void bookMenu(LinkedList& books, HashTable& ht, Queue& queue,
         cout << "  6. Display sorted books\n";
         cout << "  7. Borrow book\n";
         cout << "  8. Return book\n";
+        cout << "  9. Undo last action\n";
         cout << "  0. Back\n";
 
         int choice = readInt("Choice: ");
@@ -247,6 +352,8 @@ void bookMenu(LinkedList& books, HashTable& ht, Queue& queue,
             case 7: borrowBook(books, ht, queue, categories, history);
                     saveAll(books, queue, categories); break;
             case 8: returnBook(books, ht, queue, categories, history);
+                    saveAll(books, queue, categories); break;
+            case 9: undoAction(books, ht, categories, history);
                     saveAll(books, queue, categories); break;
             default: cout << "  ! Invalid choice.\n"; break;
         }

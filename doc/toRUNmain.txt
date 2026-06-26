@@ -1,0 +1,30 @@
+``` for window
+  g++ -std=c++17 -Wall -o smartLibrary.exe ^
+  main.cpp ^
+  ui/helpers.cpp ^
+  ui/BookUI.cpp ^
+  ui/CategoryUI.cpp ^
+  hash_table/hashTable.cpp ^
+  linked_list/LinkedList.cpp ^
+  queue/Queue.cpp ^
+  sorting/Sort.cpp ^
+  stack/Stack.cpp ^
+  tree/tree.cpp ^
+  utils/FileIO.cpp && smartLibrary.exe
+  ```
+  
+
+  ``` for ubuntu
+  g++ -std=c++17 -Wall -o smartLibrary \
+  main.cpp \
+  ui/helpers.cpp \
+  ui/BookUI.cpp \
+  ui/CategoryUI.cpp \
+  hash_table/hashTable.cpp \
+  linked_list/LinkedList.cpp \
+  queue/Queue.cpp \
+  sorting/Sort.cpp \
+  stack/Stack.cpp \
+  tree/tree.cpp \
+  utils/FileIO.cpp && ./smartLibrary
+```

@@ -49,6 +49,12 @@ static void deleteCategoryOp(LinkedList& books, HashTable& ht,
         e = e->next;
     }
 
+    // Push sentinel so undo knows where this batch starts
+    Action sentinel;
+    sentinel.type = "CAT_DELETE_START";
+    sentinel.meta = cat;
+    history.push(sentinel);
+
     // Push each deleted book to history, then remove
     for (int i = 0; i < idCount; i++) {
         Book* b = ht.searchById(ids[i]);

@@ -50,7 +50,34 @@ Student Queue::peek(){
 
     return front->data;
 }
+Student Queue::dequeueByBookId(int bookId) {
+    if (isEmpty()) return Student();
 
+    QElement* curr = front;
+    QElement* prev = nullptr;
+
+    while (curr != nullptr) {
+        if (curr->data.requestedBookId == bookId) {
+            Student data = curr->data;
+
+            if (prev == nullptr)        // removing front
+                front = curr->next;
+            else
+                prev->next = curr->next;
+
+            if (curr == rear)           // removing rear
+                rear = prev;
+
+            delete curr;
+            size--;
+            return data;
+        }
+        prev = curr;
+        curr = curr->next;
+    }
+
+    return Student();   // not found
+}
 void Queue::display() {
     QElement* e = front;
 

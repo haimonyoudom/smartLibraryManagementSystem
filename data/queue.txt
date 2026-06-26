@@ -1,4 +1,3 @@
 102,Dara,2
 98,Dom,2
 55,Sokha,4
-77,Pisach,10

@@ -21,10 +21,10 @@ struct Student
     string name;
     int requestedBookId;
 };
-struct Action
-{
+struct Action {
     string type;
-    Book bookSnapshot;
+    Book   bookSnapshot;
+    string meta;   // carries category name for CAT_DELETE_START
 };
 
 
