@@ -24,8 +24,9 @@ struct Student
 struct Action {
     string type;
     Book   bookSnapshot;
-    string meta;   // carries category name for CAT_DELETE_START
+    string meta;// carries category name for CAT_DELETE_START
+    Student studentSnapshot; 
+    bool    hasStudent = false; 
 };
-
 
 #endif

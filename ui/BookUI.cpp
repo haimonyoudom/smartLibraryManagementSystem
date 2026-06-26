@@ -206,6 +206,16 @@ static void returnBook(LinkedList& books, HashTable& ht, Queue& queue,
 
     if (!queue.isEmpty() && queue.peek().requestedBookId == id) {
         Student s = queue.dequeue();
+
+    Action autoBorrow;
+    autoBorrow.type            = "BORROW";
+    autoBorrow.bookSnapshot    = *found;
+    autoBorrow.meta            = "AUTO";
+    autoBorrow.studentSnapshot = s;      // ← save student
+    autoBorrow.hasStudent      = true;   // ← mark it
+    history.push(autoBorrow);
+        // ─────────────────────────────────────────────────────────────────
+
         found->quantity--;
         found->borrowCount++;
         updateBookStatus(*found);
@@ -218,7 +228,7 @@ static void returnBook(LinkedList& books, HashTable& ht, Queue& queue,
 
 // ── Undo ──────────────────────────────────────
 
-static void undoAction(LinkedList& books, HashTable& ht,
+static void undoAction(LinkedList& books, HashTable& ht, Queue& queue,
                        BST& categories, Stack& history) {
     if (history.isEmpty()) {
         cout << "  ! Nothing to undo.\n";
@@ -299,13 +309,22 @@ static void undoAction(LinkedList& books, HashTable& ht,
         cout << "  ✓ Undone: book [" << snap.id << "] restored to previous state.\n";
 
     } else if (last.type == "BORROW") {
-        Book* current = ht.searchById(snap.id);
-        if (current == nullptr) { cout << "  ! Book no longer exists.\n"; return; }
-        current->quantity++;
-        current->borrowCount--;
-        updateBookStatus(*current);
-        books.updateBook(snap.id, *current);
-        cout << "  ✓ Undone: borrow reversed for book [" << snap.id << "].\n";
+    Book* current = ht.searchById(snap.id);
+    if (current == nullptr) { cout << "  ! Book no longer exists.\n"; return; }
+    current->quantity++;
+    current->borrowCount--;
+    updateBookStatus(*current);
+    books.updateBook(snap.id, *current);
+
+    // ← re-enqueue the waiting student if this was an auto-borrow
+    if (last.hasStudent) {
+        queue.enqueueFront(last.studentSnapshot);
+        cout << "  ✓ Student " << last.studentSnapshot.name
+             << " (ID " << last.studentSnapshot.studentId
+             << ") returned to waiting queue.\n";
+    }
+
+    cout << "  ✓ Undone: borrow reversed for book [" << snap.id << "].\n";
 
     } else if (last.type == "RETURN") {
         Book* current = ht.searchById(snap.id);
@@ -353,7 +372,7 @@ void bookMenu(LinkedList& books, HashTable& ht, Queue& queue,
                     saveAll(books, queue, categories); break;
             case 8: returnBook(books, ht, queue, categories, history);
                     saveAll(books, queue, categories); break;
-            case 9: undoAction(books, ht, categories, history);
+            case 9: undoAction(books, ht, queue, categories, history);
                     saveAll(books, queue, categories); break;
             default: cout << "  ! Invalid choice.\n"; break;
         }

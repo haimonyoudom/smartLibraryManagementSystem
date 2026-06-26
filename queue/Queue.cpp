@@ -23,6 +23,14 @@ void Queue::enqueue(Student data){
     rear = q;
     size++; 
 }
+void Queue::enqueueFront(Student data) {
+    QElement* q = new QElement;
+    q->data = data;
+    q->next = front;
+    front = q;
+    if (rear == nullptr) rear = q;
+    size++;
+}
 Student Queue::dequeue(){
     if(isEmpty()){
         cout << "Queue is empty\n";
