@@ -4,10 +4,9 @@
 1,Dune,Frank Herbert,Fiction,2,available,7
 7,Algorithms,CLRS,Programming,2,available,5
 3,Design Patterns,Gang of Four,Programming,1,available,3
-4,The Great Gatsby,F. Scott Fitzgerald,Fiction,0,borrowed,8
+4,The Great Gatsby,F. Scott Fitzgerald,Fiction,1,available,9
 8,Cosmos,Carl Sagan,Science,2,available,6
-10,Introduction to Algorithms,Thomas Cormen,Programming,0,borrowed,13
+10,Introduction to Algorithms,Thomas Cormen,Programming,0,borrowed,14
 11,1984,George Orwell,Fiction,3,available,4
 12,A Short History of Time,Stephen Hawking,Science,1,available,9
-23,heang,heang,heang,9,available,0
 98,C++ Programing,dom,Programming,9,available,0
